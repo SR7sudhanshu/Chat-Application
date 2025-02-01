@@ -25,12 +25,19 @@ router.get("/allusers",async (req,res)=>{
 
     const userid=req.user._id;
     if(!userid) return res.status(400).json({"error":"user not authorized"});
-    console.log(userid);
+  
     const allUsers = await usermodel.find({ _id: { $ne: userid } });
 
     if(!userid) return res.status(404).json({error : "unathurized user"});
-    console.log(allUsers);
+   
     res.status(202).json({"allusers" : allUsers});
+})
+
+router.get("/curruser",async (req,res)=>{
+    const user=req.user;
+    if(!user) return res.status(404).json({error : "unathurized user"});
+
+        return res.status(200).json({user : user})
 })
 
 module.exports=router;

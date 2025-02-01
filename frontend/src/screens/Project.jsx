@@ -1,7 +1,7 @@
 import axios from "../config/axios";
 import React, { useCallback, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { initializesocket } from "../config/socket";
+import { useLocation,useNavigate } from "react-router-dom";
+import { initializesocket, sendmessage,recievemessage} from "../config/socket";
 
 
 const Project = () => {
@@ -11,9 +11,40 @@ const Project = () => {
   const [allUsers, setallUsers] = useState([]);
   const location = useLocation();
   const [usersInProject, setusersInProject] = useState(location.state?.project?.users || []);
+  const [curruser,setcurruser]=useState(null);
+  const [message,setmessage]=useState("");
   console.log(location.state);
   const projectid = location.state.project._id || null;
+  const navigate=useNavigate();
 
+  //function to gegt the current logged in user
+  const getcurruser = async () => {
+    try {
+      const response = await axios.get("/curruser");
+  
+      if (!response.data.user) {
+        navigate("/login");  // Redirect to login if no user is found
+        return;  // Exit function early
+      }
+  
+      console.log("The current user is --", response.data.user);
+      setcurruser(response.data.user);
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      navigate("/login"); // Redirect to login in case of an error
+    }
+  };
+  
+
+  const send=()=>{
+    console.log("sending the message");
+
+    sendmessage("project-messg",{
+      message,
+      sender : curruser._id
+    })
+    setmessage("");
+  }
   
   const getallusers = async (params) => {
     console.log("entered the get all users function");
@@ -34,9 +65,11 @@ const Project = () => {
   };
 
   useEffect(() => {
-    initializesocket();
+    console.log(projectid);
+    getcurruser();
     getallusers();
     getprojectuser();
+    initializesocket(projectid);
   }, []);
 
   // Handle user selection
@@ -139,12 +172,16 @@ const Project = () => {
 
         <div className="input w-full flex flex-row p-2 bg-white shadow-lg">
           <input
+            value={message}
+            onChange={(e)=>{setmessage(e.target.value)}}
             className="p-3 h-10 flex-grow max-h-14 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 transform hover:scale-105"
             placeholder="enter the message"
             type="text"
             name="message"
           />
-          <button className="px-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-110">
+          <button 
+          onClick={send}
+          className="px-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-110">
             <i className="p-1 ri-send-plane-2-fill text-3xl"></i>
           </button>
         </div>
