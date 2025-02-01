@@ -75,11 +75,11 @@ io.use(async (socket,next)=>{
 
 io.on('connection', (socket) =>{
     console.log("a user connected")
-    
-    socket.join(socket.project._id)
+    const roomid=socket.project._id.toString();
+    socket.join(roomid)
     socket.on("project-messg",(data)=>{
         console.log(data);
-        socket.broadcast.to("project-messg").emit("project-messg",data);
+        socket.to(roomid).emit("project-messg",data);
     })
 
     socket.on('disconnect',()=>{

@@ -21,8 +21,8 @@ const Project = () => {
   const getcurruser = async () => {
     try {
       const response = await axios.get("/curruser");
-  
-      if (!response.data.user) {
+      const data=response.data?.user
+      if (!data) {
         navigate("/login");  // Redirect to login if no user is found
         return;  // Exit function early
       }
@@ -41,7 +41,11 @@ const Project = () => {
 
     sendmessage("project-messg",{
       message,
-      sender : curruser._id
+      sender : curruser
+    })
+    appendoutgoingmessage({
+      message,
+      sender : curruser
     })
     setmessage("");
   }
@@ -64,12 +68,37 @@ const Project = () => {
     setusersInProject(response.data.users);
   };
 
+  function appendincomingmessage(data){
+    console.log("the incoming message is",data);
+    const messagearea=document.querySelector(".messagearea");
+    const incomingmessage=document.createElement("div"); 
+    incomingmessage.classList.add("incoming","w-fit","bg-white","max-w-48","flex","flex-col","p-2","rounded-lg","shadow-md","hover:shadow-lg","transition-all","duration-300","transform","hover:scale-105");
+    incomingmessage.innerHTML=`<small class="text-base opacity-55">${data.sender.email}</small>${data.message}`;
+    messagearea.appendChild(incomingmessage);
+  }
+
+  function appendoutgoingmessage(data){
+    console.log("the outgoing message is",data);
+    const messagearea=document.querySelector(".messagearea");
+    const outgoingmessage=document.createElement("div"); 
+    outgoingmessage.classList.add("outgoing","ml-auto","w-fit","bg-white","max-w-48","flex","flex-col","p-2","rounded-lg","shadow-md","hover:shadow-lg","transition-all","duration-300","transform","hover:scale-105");
+    outgoingmessage.innerHTML=`<small class="text-base opacity-55">${data.sender.email}</small>${data.message}`;
+    messagearea.appendChild(outgoingmessage);
+  }
+
+
+
   useEffect(() => {
-    console.log(projectid);
+    
     getcurruser();
     getallusers();
     getprojectuser();
     initializesocket(projectid);
+
+    recievemessage("project-messg",data=>{console.log(data)
+      appendincomingmessage(data)
+    })
+
   }, []);
 
   // Handle user selection
@@ -132,14 +161,14 @@ const Project = () => {
         </header>
 
         <div className="messagearea flex flex-col flex-grow gap-1 p-1 overflow-y-auto">
-          <div className="incoming w-fit bg-white max-w-48 flex flex-col p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+          {/* <div className="incoming w-fit bg-white max-w-48 flex flex-col p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
             <small className="text-base opacity-55">user@ggmail.com</small>
             message by the user
           </div>
           <div className="outgoing ml-auto w-fit bg-white max-w-48 flex flex-col p-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
             <small className="text-base opacity-55">user@ggmail.com</small>
             message by the user
-          </div>
+          </div> */}
         </div>
 
         <div

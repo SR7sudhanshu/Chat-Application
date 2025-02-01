@@ -6,10 +6,15 @@ const authenticationforall = async function(req,res,next){
     if(!token){
         return next();
     }
-
-    const user=jwt.verify(token,process.env.SECRET);
-    req.user=user;
-    console.log("user at the token function is - ",req.user);
+    try {
+        
+        const user=jwt.verify(token,process.env.SECRET);
+        req.user=user;
+        console.log("user at the token function is - ",req.user);
+    } catch (error) {
+        console.log(error);
+        return next();
+    }
     return next();
 }
 
