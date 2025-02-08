@@ -32,12 +32,25 @@ const Project = () => {
     }
   };
 
-  const send = () => {
+  const send =async () => {
+    try {
     if (!message.trim()) return;
-    const outgoingMessage = { message, sender: curruser };
-    sendmessage("project-messg", outgoingMessage);
-    setMessages((prev) => [...prev, outgoingMessage]); // Append outgoing message to state
-    setmessage("");
+      const outgoingMessage = { message, sender: curruser,projectid : projectid};
+
+      const messg=await axios.post("/message/sendmessage", outgoingMessage);
+      console.log(messg.data);
+      const messg_id=messg.data.newmessage._id;
+      console.log("message saved to database");
+      outgoingMessage.messageid=messg_id;
+      console.log(outgoingMessage);
+      sendmessage("project-messg", outgoingMessage);
+      setMessages((prev) => [...prev, outgoingMessage]); // Append outgoing message to state
+      setmessage("");
+    
+    } catch (error) {
+      console.log(error);
+    }
+
   };
 
   const getallusers = async () => {
@@ -85,12 +98,23 @@ const Project = () => {
     }
   };
 
+  const fetchmessages = async () => {
+    try {
+      const response = await axios.get(`/message/allmessages/${projectid}`);
+      console.log("messages fetched");
+      console.log(response.data);
+      setMessages(response.data.messages || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  }
+
   useEffect(() => {
     getcurruser();
     getallusers();
     getprojectuser();
     initializesocket(projectid);
-
+    fetchmessages();
     recievemessage("project-messg", (data) => {
       setMessages((prev) => [...prev, data]); // Append incoming message to state
     });
@@ -149,16 +173,16 @@ const Project = () => {
 
             return (
               <div
-                key={index}
+                key={msg._id}
                 className={`${
                   isCurrentUser
                     ? "outgoing ml-auto bg-green-600 text-white w-fit max-w-56"
                     : isAI
-                    ? "ai-message w-full bg-gray-800 text-white"
+                    ? "ai-message w-full bg-gray-800 text-white overflow-auto max-h-80"
                     : "incoming bg-blue-600 text-white w-fit max-w-56"
-                }  flex flex-col p-2 rounded-lg shadow-md overflow-auto max-h-80`}
+                }  flex flex-col p-2 rounded-lg shadow-md `}
               >
-                <small class="text-base opacity-55">{msg.sender.email}</small>
+                <small className="text-base opacity-55">{msg.sender.email}</small>
                 {isAI ? (
                   <Markdown>{msg.message}</Markdown>
                 ) : (

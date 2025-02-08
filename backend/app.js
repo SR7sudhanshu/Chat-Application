@@ -17,7 +17,7 @@ const jwt = require('jsonwebtoken');
 const projectmodel = require('./models/project');
 const airouter=require("./routes/ai.routes");
 const { getresult } = require('./services/ai.services');
-
+const mssgrouter=require("./routes/message.route")
 const app=express();
 
 connectDB().then(()=>{
@@ -36,7 +36,7 @@ app.use(authenticationforall)
 app.use("/",userrouter);
 app.use("/project",projectrouter);
 app.use("/ai",airouter);
-
+app.use("/message",mssgrouter);
 
 //creating a http server using app 
 const server=http.createServer(app);
