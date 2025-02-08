@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "../config/axios";
 import { Link,useNavigate } from "react-router-dom";
 import { useContext } from "react";
@@ -18,9 +18,14 @@ function Login() {
           .post("/login", { email, password })
           .then((res) => {
             console.log("Login successful:", res.data);
+
+            //checking the localstorage if the token is present or not should be implemented
+
             localStorage.setItem("token",res.data.token);
+
             setUser(res.data.user);
             navigate("/"); // Redirect to home page
+
           })
           .catch((err) => {
             console.error("Login error:", err.response?.data || err.message);
@@ -28,6 +33,9 @@ function Login() {
           });
       }
       
+      useEffect(()=>{
+      if(localStorage.getItem('token'))  localStorage.removeItem('token')
+      },[])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">

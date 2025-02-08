@@ -15,6 +15,8 @@ const cookieParser = require('cookie-parser');
 const { authenticationforall } = require('./middelewares/authentication2');
 const jwt = require('jsonwebtoken');
 const projectmodel = require('./models/project');
+const airouter=require("./routes/ai.routes");
+const { getresult } = require('./services/ai.services');
 
 const app=express();
 
@@ -33,6 +35,7 @@ app.use(authenticationforall)
 
 app.use("/",userrouter);
 app.use("/project",projectrouter);
+app.use("/ai",airouter);
 
 
 //creating a http server using app 
@@ -77,9 +80,23 @@ io.on('connection', (socket) =>{
     console.log("a user connected")
     const roomid=socket.project._id.toString();
     socket.join(roomid)
-    socket.on("project-messg",(data)=>{
+    socket.on("project-messg",async (data)=>{
         console.log(data);
+        //using socket.to so that the message goes from user to others excluding itsel
         socket.to(roomid).emit("project-messg",data);
+
+        if(data.message.includes("@ai")){
+            const result=await getresult(data.message);
+            const newdata={
+                message : result,
+                sender : {
+                    id : "AI",
+                    email : "AI"
+                }
+            }
+            io.to(roomid).emit("project-messg",newdata);
+        }
+
     })
 
     socket.on('disconnect',()=>{

@@ -1,4 +1,5 @@
 const jwt=require("jsonwebtoken");
+const { checktoken } = require("../services/authentication");
 
 const authenticationforall = async function(req,res,next){
     const token=req.cookies?.token || (req.headers.authorization?.split(' ')[ 1 ]);
@@ -8,11 +9,11 @@ const authenticationforall = async function(req,res,next){
     }
     try {
         
-        const user=jwt.verify(token,process.env.SECRET);
+        const user=checktoken(token)
         req.user=user;
         console.log("user at the token function is - ",req.user);
     } catch (error) {
-        console.log(error);
+        console.log("the user not found");
         return next();
     }
     return next();

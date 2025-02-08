@@ -1,6 +1,6 @@
 const express=require('express');
 const router=express.Router();
-const {createuser,loginuser}=require("../controllers/user");
+const {createuser,loginuser, signout}=require("../controllers/user");
 const { body } = require('express-validator');
 const { auth } = require('../middelewares/auth');
 const usermodel = require('../models/user');
@@ -22,9 +22,11 @@ router.get("/profile",auth,(req,res)=>{
 });
 
 router.get("/allusers",async (req,res)=>{
+    const requser=req.user;
 
+    if(!requser) return res.status(400).json({"error":"user not authorized"});
+    
     const userid=req.user._id;
-    if(!userid) return res.status(400).json({"error":"user not authorized"});
   
     const allUsers = await usermodel.find({ _id: { $ne: userid } });
 
@@ -39,5 +41,7 @@ router.get("/curruser",async (req,res)=>{
 
         return res.status(200).json({user : user})
 })
+
+router.post("/logout",signout);
 
 module.exports=router;

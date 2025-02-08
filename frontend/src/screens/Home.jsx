@@ -13,6 +13,7 @@ const Home = () => {
   const fetchProjects = async () => {
     try {
       const response = await axios.get("/project"); // API endpoint to fetch projects
+      console.log("the project data is - ",response.data);
       setProjects(response.data.projects); // Assuming the response structure
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -32,6 +33,7 @@ const Home = () => {
       fetchProjects(); // Refresh project list after creation
     } catch (error) {
       console.error("Error creating project:", error);
+      alert("please login to continue");
     }
   };
 

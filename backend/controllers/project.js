@@ -12,9 +12,9 @@ async function createproject(req,res) {
     console.log(name);
     console.log(req.user);
 
-    const userid=req.user._id;
-    
-    if(!userid) return res.status(400).json({error : "unauthorized user"});
+    const user=req.user;
+    if(!user) return res.status(404).json({error : "unathurized user"});
+    const userid=user._id;
 
 try {
     const project=await projectmodel.create({

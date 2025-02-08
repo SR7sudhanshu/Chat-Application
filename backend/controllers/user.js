@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const usermodel=require('../models/user')
-const {createtokenforuser , checktoken}=require("../services/authentication")
+const {createtokenforuser , checktoken}=require("../services/authentication");
+const blacklistmodel = require('../models/blacklist');
 // async function createuser(req,res){
 //     const {fullname,email,password}=req.body;
 //     if(!fullname) return res.status(400).json({message : 'fullname cannot be empty'})
@@ -54,7 +55,16 @@ async function loginuser(req,res) {
         return res.status(200).json({"token" : token,"user":user});
 }
 
+async function signout(req,res){
+    const token=req.cookies?.token || (req.headers.authorization?.split(' ')[ 1 ]);
+    const expiretoken=await blacklistmodel.create({
+        token
+    })
+    return res.status(200).json({"success" : "user logged out succesfully"});
+}
+
 module.exports={
     createuser,
-    loginuser
+    loginuser,
+    signout
 }

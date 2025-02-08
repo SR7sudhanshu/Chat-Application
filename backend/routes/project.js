@@ -8,6 +8,8 @@ const mongoose=require("mongoose");
 const router=Router();
 
 router.get("/",async (req,res)=>{
+    const user=req.user;
+    if(!user) return res.status(404).json({error : "unathurized user"});
     const userid=req.user._id;
     console.log(userid);
     try{
