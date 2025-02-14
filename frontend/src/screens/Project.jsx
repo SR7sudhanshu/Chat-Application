@@ -15,8 +15,10 @@ const Project = () => {
   const [message, setmessage] = useState("");
   const [messages, setMessages] = useState([]); // New state for messages
   const projectid = location.state.project._id || null;
+  const [onlineusers, setonlineusers] = useState([]);
   const navigate = useNavigate();
 
+  // Fetch the current user
   const getcurruser = async () => {
     try {
       const response = await axios.get("/curruser");
@@ -32,27 +34,27 @@ const Project = () => {
     }
   };
 
-  const send =async () => {
+  // Send a message
+  const send = async () => {
     try {
-    if (!message.trim()) return;
-      const outgoingMessage = { message, sender: curruser,projectid : projectid};
+      if (!message.trim()) return;
+      const outgoingMessage = { message, sender: curruser, projectid: projectid };
 
-      const messg=await axios.post("/message/sendmessage", outgoingMessage);
+      const messg = await axios.post("/message/sendmessage", outgoingMessage);
       console.log(messg.data);
-      const messg_id=messg.data.newmessage._id;
+      const messg_id = messg.data.newmessage._id;
       console.log("message saved to database");
-      outgoingMessage.messageid=messg_id;
+      outgoingMessage.messageid = messg_id;
       console.log(outgoingMessage);
       sendmessage("project-messg", outgoingMessage);
       setMessages((prev) => [...prev, outgoingMessage]); // Append outgoing message to state
       setmessage("");
-    
     } catch (error) {
       console.log(error);
     }
-
   };
 
+  // Fetch all users
   const getallusers = async () => {
     try {
       const response = await axios.get("/allusers");
@@ -62,6 +64,7 @@ const Project = () => {
     }
   };
 
+  // Fetch users in the project
   const getprojectuser = async () => {
     try {
       const response = await axios.get(`/project/users/${projectid}`);
@@ -71,6 +74,7 @@ const Project = () => {
     }
   };
 
+  // Toggle user selection for adding to the project
   const toggleUserSelection = (userId) => {
     const updatedSet = new Set(selectedUsers);
     if (updatedSet.has(userId)) {
@@ -81,6 +85,7 @@ const Project = () => {
     setSelectedUsers(updatedSet);
   };
 
+  // Add selected users to the project
   const addUsersToProject = async () => {
     try {
       const projectId = location.state.project._id;
@@ -98,6 +103,7 @@ const Project = () => {
     }
   };
 
+  // Fetch all messages for the project
   const fetchmessages = async () => {
     try {
       const response = await axios.get(`/message/allmessages/${projectid}`);
@@ -107,18 +113,27 @@ const Project = () => {
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
-  }
+  };
 
+  // Initialize data and socket connections on component mount
   useEffect(() => {
     getcurruser();
     getallusers();
     getprojectuser();
-    initializesocket(projectid);
+    initializesocket();
     fetchmessages();
     recievemessage("project-messg", (data) => {
       setMessages((prev) => [...prev, data]); // Append incoming message to state
     });
   }, []);
+
+  // Listen for online users
+  useEffect(() => {
+    recievemessage("currentonline", (data) => {
+      setonlineusers(data);
+      console.log(data);
+    });
+  });
 
   return (
     <main className="w-screen h-screen flex bg-slate-600">
@@ -152,21 +167,34 @@ const Project = () => {
           </button>
 
           {usersInProject.length > 0 ? (
-            usersInProject.map((user) => (
-              <div
-                className="overflow-hidden users w-full h-16 bg-slate-400 flex items-center text-3xl hover:bg-slate-600 transition-all duration-300 cursor-pointer transform hover:translate-x-2"
-                key={user._id}
-              >
-                <i className="ri-account-circle-fill px-4"></i>
-                <small>{user.fullname}</small>
-              </div>
-            ))
+            usersInProject.map((user) => {
+              // Check if the user is online
+              const isOnline = Object.values(onlineusers).includes(user._id);
+
+              return (
+                <div
+                  className="overflow-hidden users w-full h-16 bg-slate-400 flex items-center text-3xl hover:bg-slate-600 transition-all duration-300 cursor-pointer transform hover:translate-x-2"
+                  key={user._id}
+                >
+                  <i className="ri-account-circle-fill px-4"></i>
+                  <small className="flex-1">{user.fullname}</small>
+                  {/* Display online/offline status */}
+                  <span
+                    className={`ml-auto px-3 py-1 text-sm rounded-full ${
+                      isOnline ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {isOnline ? "Online" : "Offline"}
+                  </span>
+                </div>
+              );
+            })
           ) : (
             <div>No users found</div>
           )}
         </div>
 
-          <div className="messagearea flex flex-col flex-grow gap-1 p-1 overflow-y-auto">
+        <div className="messagearea flex flex-col flex-grow gap-1 p-1 overflow-y-auto">
           {messages.map((msg, index) => {
             const isCurrentUser = msg.sender.email === curruser.email;
             const isAI = msg.sender.email === "AI";
@@ -192,7 +220,6 @@ const Project = () => {
             );
           })}
         </div>
-
 
         <div className="input w-full flex flex-row p-2 bg-white shadow-lg">
           <input

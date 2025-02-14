@@ -54,10 +54,6 @@ const io=new Server(server,{
 //using auth so that sending the request in auth form frontend
 io.use(async (socket,next)=>{
     try {
-        const projectid=socket.handshake.query.projectid;
-        const project= await projectmodel.findById(projectid);
-        console.log("the projcet at the socket middlewareis-",project);
-        if(!project) return next(new Error("project id is not valid"));
 
         const token=socket.handshake.auth?.token || socket.handshake.headers.authorization?.split(' ')[ 1 ]
         if(!token) return next(new Error("authentication error"))
@@ -66,8 +62,7 @@ io.use(async (socket,next)=>{
             if(!decoded) return next(new Error("authentication error"));
 
             socket.user=decoded;
-            socket.project=project;
-           
+             
             next();
 
     } catch (error) {
@@ -75,13 +70,28 @@ io.use(async (socket,next)=>{
     }
 
 })
+const users={};
+io.on('connection',async (socket) =>{
+    console.log("a user connected");
+    if(users[socket.id]==undefined){
+    users[socket.id]=socket.user._id;
+    }
+    io.emit("currentonline",users);
 
-io.on('connection', (socket) =>{
-    console.log("a user connected")
-    const roomid=socket.project._id.toString();
-    socket.join(roomid)
+    const userid=socket.user._id;
+    //joining the room for the all the project of the user
+    const allprojects=await projectmodel.find({
+        users : userid
+    })
+    allprojects.forEach((project)=>{
+        const projectid=project._id.toString();
+        socket.join(projectid);
+    })
+
+   
     socket.on("project-messg",async (data)=>{
         console.log(data);
+        const roomid=data.projectid;
         //using socket.to so that the message goes from user to others excluding itsel
         socket.to(roomid).emit("project-messg",data);
 
@@ -101,8 +111,12 @@ io.on('connection', (socket) =>{
 
     socket.on('disconnect',()=>{
         console.log('a user disconnceted')
+        delete users[socket.id];
+        io.emit("currentonline",users);
     })
 })
+
+
 
 
 server.listen(port,()=>{

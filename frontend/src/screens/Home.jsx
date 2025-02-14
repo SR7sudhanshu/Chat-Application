@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../config/axios";
 import { Navigate,useNavigate } from "react-router-dom";
+import { initializesocket } from "../config/socket";
 
 const Home = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -40,6 +41,7 @@ const Home = () => {
   // Fetch projects when component mounts
   useEffect(() => {
     fetchProjects();
+    initializesocket();
   }, []);
 
   return (
