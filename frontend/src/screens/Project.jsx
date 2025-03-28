@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useContext,useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate,Navigate } from "react-router-dom";
 import { initializesocket, sendmessage, recievemessage } from "../config/socket";
 import Markdown from "markdown-to-jsx";
 import axios from "../config/axios";
+import { UserContext } from "../context/Context";
+
 
 const Project = () => {
   const [sidepanel, setsidepanel] = useState(false);
@@ -17,6 +19,10 @@ const Project = () => {
   const projectid = location.state.project._id || null;
   const [onlineusers, setonlineusers] = useState([]);
   const navigate = useNavigate();
+
+  //if no user found on reload then redirect to login page
+  // const {user}=useContext(UserContext);
+  // if(!user) return <Navigate to="/login" />; 
 
   // Fetch the current user
   const getcurruser = async () => {

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "../config/axios";
 import { Navigate,useNavigate } from "react-router-dom";
 import { initializesocket,recievemessage } from "../config/socket";
 import Nav from "../components/Nav";
-
+import {UserContext } from "../context/Context"
 
 const Home = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -12,7 +12,11 @@ const Home = () => {
   const [messages, setMessages] = useState([]);
   const [unread,setunread]=useState(null);
 
-
+  //checking the user is there is no user then redirect to login page
+  // const {user}=useContext(UserContext);
+  // if(!user) return <Navigate to="/login" />; 
+  
+  // Redirect to login if not authenticated
   const navigate=useNavigate();
 
   // Fetch projects from API
@@ -44,16 +48,19 @@ const Home = () => {
   };
 
   // function to set the number of messages recieved from the groups
-  const unreadmessages=()=>{
-    const uniqueMessages = Array.from(new Set(messages.map(msg => JSON.stringify(msg)))).map(msg => JSON.parse(msg));
-    const unreadCount = uniqueMessages.reduce((acc, msg) => {
-      acc[msg.projectid] = (acc[msg.projectid] || 0) + 1;
-      return acc;
-    }, {});
-    setunread(unreadCount);
-    console.log(unread);
-  }
-
+  useEffect(() => {
+    const unreadmessages = () => {
+      const uniqueMessages = Array.from(new Set(messages.map(msg => JSON.stringify(msg)))).map(msg => JSON.parse(msg));
+      const unreadCount = uniqueMessages.reduce((acc, msg) => {
+        acc[msg.projectid] = (acc[msg.projectid] || 0) + 1;
+        return acc;
+      }, {});
+      setunread(unreadCount);
+      console.log("The unread object is -- ", unreadCount);
+    };
+  
+    unreadmessages();
+  }, [messages]);
 
   // Fetch projects when component mounts
   useEffect(() => {
@@ -62,7 +69,6 @@ const Home = () => {
     recievemessage("project-messg", (data) => {
           setMessages((prev) => [...prev, data]); // Append incoming message to state
         });
-    unreadmessages();
   }, []);
 
   return (
@@ -70,15 +76,14 @@ const Home = () => {
     <div className="min-h-screen flex flex-col items-center justify-center relative bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white ">
       {/*notification icon*/}
       <Nav message={messages}/>
-
-      {/* Rotating 3D Box Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-          <div className="animate-spin-slow rounded-lg border-[15px] border-t-gray-700 border-r-gray-600 border-b-gray-500 border-l-gray-400 w-64 h-64 transform rotate-45 blur-md"></div>
+      /* Rotating 3D Box Background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+            <div className="animate-spin-slow rounded-lg border-[15px] border-t-gray-700 border-r-gray-600 border-b-gray-500 border-l-gray-400 w-64 h-64 transform rotate-45 blur-md"></div>
+          </div>
         </div>
-      </div>
 
-      {/* Gradient Animated Text */}
+        {/* Gradient Animated Text */}
       <h1 className="text-6xl md:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 animate-text-shadow">
         Welcome
       </h1>
@@ -99,34 +104,41 @@ const Home = () => {
 
 
       {/* Project List */}
-      <div className="mt-16 w-full max-w-5xl">
-        <h2 className="text-3xl font-semibold text-center mb-8">Your Projects</h2>
-        {projects && projects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div
-              onClick={()=>{
-                navigate(`/project`,{
-                  state : {project}
-                })
+        <div className="mt-16 w-full max-w-5xl">
+          <h2 className="text-3xl font-semibold text-center mb-8">Your Projects</h2>
+          {projects && projects.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <div
+              onClick={() => {
+            navigate(`/project`, {
+              state: { project },
+            });
               }}
-                key={project._id}
-                className="p-6 bg-gray-800 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300"
-              >
-                <h3 className="text-xl font-bold text-indigo-400">{project.name}</h3>
-                <p>{project.users.length}</p>
-                <p className="mt-2 text-gray-400">
-                  Created on: {new Date(project.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500">No projects created yet.</p>
-        )}
-      </div>
+              key={project._id}
+              className={`p-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 ${
+            unread && unread[project._id] ? "border-4 border-green-500" : "bg-gray-800"
+              }`}
+            >
+              <h3 className="text-xl font-bold text-indigo-400">{project.name}</h3>
+              <p>{project.users.length}</p>
+              <p className="mt-2 text-gray-400">
+            Created on: {new Date(project.createdAt).toLocaleDateString()}
+              </p>
+              {unread && unread[project._id] && (
+            <span className="mt-2 inline-block px-3 py-1 text-sm font-semibold text-white bg-green-500 rounded-full">
+              {unread[project._id]} Unread
+            </span>
+              )}
+            </div>
+          ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500">No projects created yet.</p>
+          )}
+        </div>
 
-      {/* Floating Elements */}
+        {/* Floating Elements */}
       <div className="absolute top-10 right-10 animate-float">
         <div className="w-16 h-16 bg-gradient-to-tr from-pink-500 to-yellow-500 rounded-full shadow-lg shadow-pink-500/30 blur-sm"></div>
       </div>
