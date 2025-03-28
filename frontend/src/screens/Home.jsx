@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "../config/axios";
 import { Navigate,useNavigate } from "react-router-dom";
-import { initializesocket } from "../config/socket";
+import { initializesocket,recievemessage } from "../config/socket";
+import Nav from "../components/Nav";
+
 
 const Home = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projects, setProjects] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [unread,setunread]=useState(null);
+
 
   const navigate=useNavigate();
 
@@ -38,14 +43,34 @@ const Home = () => {
     }
   };
 
+  // function to set the number of messages recieved from the groups
+  const unreadmessages=()=>{
+    const uniqueMessages = Array.from(new Set(messages.map(msg => JSON.stringify(msg)))).map(msg => JSON.parse(msg));
+    const unreadCount = uniqueMessages.reduce((acc, msg) => {
+      acc[msg.projectid] = (acc[msg.projectid] || 0) + 1;
+      return acc;
+    }, {});
+    setunread(unreadCount);
+    console.log(unread);
+  }
+
+
   // Fetch projects when component mounts
   useEffect(() => {
     fetchProjects();
     initializesocket();
+    recievemessage("project-messg", (data) => {
+          setMessages((prev) => [...prev, data]); // Append incoming message to state
+        });
+    unreadmessages();
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white">
+    <>
+    <div className="min-h-screen flex flex-col items-center justify-center relative bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white ">
+      {/*notification icon*/}
+      <Nav message={messages}/>
+
       {/* Rotating 3D Box Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 w-full h-full flex items-center justify-center">
@@ -70,6 +95,8 @@ const Home = () => {
       >
         Create New Project
       </button>
+
+
 
       {/* Project List */}
       <div className="mt-16 w-full max-w-5xl">
@@ -139,6 +166,7 @@ const Home = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

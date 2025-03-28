@@ -133,7 +133,7 @@ const Project = () => {
       setonlineusers(data);
       console.log(data);
     });
-  });
+  },[]);
 
   return (
     <main className="w-screen h-screen flex bg-slate-600">
