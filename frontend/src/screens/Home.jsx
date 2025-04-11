@@ -76,7 +76,7 @@ const Home = () => {
     <div className="min-h-screen flex flex-col items-center justify-center relative bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white ">
       {/*notification icon*/}
       <Nav message={messages}/>
-      /* Rotating 3D Box Background */}
+      {/* Rotating 3D Box Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 w-full h-full flex items-center justify-center">
             <div className="animate-spin-slow rounded-lg border-[15px] border-t-gray-700 border-r-gray-600 border-b-gray-500 border-l-gray-400 w-64 h-64 transform rotate-45 blur-md"></div>

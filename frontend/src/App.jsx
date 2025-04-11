@@ -4,7 +4,9 @@ import Signin from './screens/Signin';
 import Login from './screens/login';
 import { UserContext,UserProvider } from './context/Context';
 import Home from './screens/Home';
+import Home2 from './screens/Home2';
 import Project from './screens/Project';
+//import Project2 from './screens/Project2';
 import 'remixicon/fonts/remixicon.css';
 
 
