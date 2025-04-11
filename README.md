@@ -1,6 +1,3 @@
-Here’s a polished `README.md` for your **Chat Application** project, based on the features and stack you've described:
-
----
 
 ```markdown
 # 💬 Chat Application
